@@ -15,7 +15,19 @@ const OnboardingScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {step === 0 && <Text style={styles.text}>Let's Get Started</Text>}
-      {step === 1 && <Text style={styles.text}>About EaseSpeak</Text>}
+      {step === 1 && (
+        <View>
+          <Text style={styles.text}>About</Text>
+          <Text style={styles.aboutText}>
+            EASE SPEAK is an innovative speech recognition system designed to assist 
+            individuals with stuttering and speech impairments. Leveraging advanced 
+            technology, EASE SPEAK provides near real-time support, enhancing communication 
+            and boosting confidence. This mobile application adapts to individual speech 
+            patterns, helping users articulate more clearly and effectively, fostering 
+            greater independence and ease in everyday conversations.
+          </Text>
+        </View>
+      )}
       {step === 2 && <Text style={styles.text}>WELCOME TO EASE SPEAK</Text>}
 
       <View style={styles.buttonContainer}>
@@ -35,12 +47,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#ffffff",
+    paddingHorizontal: 20,
   },
   text: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 20,
+  },
+  aboutText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 10,
+    paddingHorizontal: 10,
   },
   buttonContainer: {
     position: "absolute",
