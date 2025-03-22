@@ -8,7 +8,7 @@ const OnboardingScreen = ({ navigation }) => {
     if (step < 2) {
       setStep(step + 1);
     } else {
-      navigation.replace("Home"); // Go to HomeScreen after last step
+      navigation.replace("Tutorial"); // Now directs to TutorialScreen instead of Home
     }
   };
 
@@ -17,7 +17,7 @@ const OnboardingScreen = ({ navigation }) => {
       {step === 0 && <Text style={styles.text}>Let's Get Started</Text>}
       {step === 1 && (
         <View>
-          <Text style={styles.text}>About</Text>
+          <Text style={styles.text}>About Ease Speak</Text>
           <Text style={styles.aboutText}>
             EASE SPEAK is an innovative speech recognition system designed to assist 
             individuals with stuttering and speech impairments. Leveraging advanced 
@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 10,
     paddingHorizontal: 10,
+    lineHeight: 22,
   },
   buttonContainer: {
     position: "absolute",
