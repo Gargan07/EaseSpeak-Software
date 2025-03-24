@@ -101,7 +101,7 @@ export default function App() {
     });
 
     try {
-      const response = await fetch("http://192.168.1.2:8000/transcribe/", {
+      const response = await fetch("http://192.168.1.5:8000/transcribe/", {
         method: "POST",
         body: formData,
         headers: {
@@ -124,7 +124,7 @@ export default function App() {
 
   const testConnection = async () => {
     try {
-      const response = await fetch("http://192.168.1.2:8000/test/", {
+      const response = await fetch("http://192.168.1.5:8000/test/", {
         method: "GET",
       });
       if (response.ok) {

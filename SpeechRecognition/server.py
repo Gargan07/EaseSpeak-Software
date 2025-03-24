@@ -83,7 +83,7 @@ def clean_disfluencies(text):
 
 @app.post("/transcribe/")
 async def process_speech(file: UploadFile = File(...)):
-    print(f"📥 Received file: {file.filename}")
+    print(f"📥 Received file: {file.filename}")    
     try:
         start_time = time.time()
 
@@ -91,7 +91,7 @@ async def process_speech(file: UploadFile = File(...)):
         temp_path = os.path.join(audio_directory, f"temp_{file.filename}")
         with open(temp_path, "wb") as f:
             f.write(await file.read())
-
+        print(f"📥 Path file: {temp_path}")
         # Convert the uploaded file to WAV format (forcefully)
         wav_path = os.path.join(audio_directory, "converted_audio.wav")
         wav_path = convert_to_wav(temp_path, wav_path)
