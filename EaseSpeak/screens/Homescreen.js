@@ -98,7 +98,7 @@ export default function HomeScreen() {
     });
 
     try {
-      const response = await fetch("http://192.168.1.2:8000/transcribe/", {
+      const response = await fetch("http://192.168.100.2:8000/transcribe/", {
         method: "POST",
         body: formData,
         headers: {
@@ -121,18 +121,18 @@ export default function HomeScreen() {
 
   const testConnection = async () => {
     try {
-      const response = await fetch("http://192.168.1.2:8000/test/", {
+      const response = await fetch("http://192.168.100.2:8000/test/", {
         method: "GET",
       });
       if (response.ok) {
-        console.log("✅ Successfully connected to FastAPI!");
+        console.log("Successfully connected to FastAPI!");
         Alert.alert("Success", "Connected to FastAPI!");
       } else {
-        console.error("❌ Failed to connect to FastAPI:", response.status);
+        console.error("Failed to connect to FastAPI:", response.status);
         Alert.alert("Error", "Could not connect to FastAPI.");
       }
     } catch (error) {
-      console.error("❌ Error connecting:", error);
+      console.error("Error connecting:", error);
       Alert.alert("Error", "Could not reach FastAPI.");
     }
   };
