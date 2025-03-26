@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Text, Button, StyleSheet, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons"; // Import Ionicons for the back arrow
+
+const PURPLE = "#895FFF";
+const WHITE = "#FFFFFF";
+const BLACK = "#000000";
 
 const OnboardingScreen = ({ navigation }) => {
   const [step, setStep] = useState(0);
@@ -12,8 +17,23 @@ const OnboardingScreen = ({ navigation }) => {
     }
   };
 
+  const prevStep = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    } else {
+      navigation.goBack(); // Go back if on the first step
+    }
+  };
+
   return (
     <View style={styles.container}>
+      {/* Back button at the top left, hidden on the last step */}
+      {step !== 0 && (
+        <TouchableOpacity style={styles.backButton} onPress={prevStep}>
+          <Ionicons name="chevron-back" size={24} color={BLACK} />
+        </TouchableOpacity>
+      )}
+
       {step === 0 && <Text style={styles.text}>Let's Get Started</Text>}
       {step === 1 && (
         <View>
@@ -32,9 +52,9 @@ const OnboardingScreen = ({ navigation }) => {
 
       <View style={styles.buttonContainer}>
         {step < 2 ? (
-          <Button title="Next" onPress={nextStep} />
+          <Button title="Next" onPress={nextStep} color={PURPLE} />
         ) : (
-          <Button title="Get Started" onPress={nextStep} />
+          <Button title="Get Started" onPress={nextStep} color={PURPLE} />
         )}
       </View>
     </View>
@@ -46,14 +66,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: WHITE, // Updated background color
     paddingHorizontal: 20,
+  },
+  backButton: {
+    position: "absolute",
+    top: 50,
+    left: 20,
   },
   text: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 20,
+    color: BLACK, // Updated text color
   },
   aboutText: {
     fontSize: 16,
@@ -61,10 +87,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 10,
     lineHeight: 22,
+    color: BLACK, // Updated text color
   },
   buttonContainer: {
     position: "absolute",
     bottom: 50,
+    flexDirection: "row",
+    gap: 10,
   },
 });
 

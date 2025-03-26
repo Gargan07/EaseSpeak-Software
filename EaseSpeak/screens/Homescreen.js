@@ -12,24 +12,41 @@ import {
 import * as FileSystem from "expo-file-system";
 import { Audio } from "expo-av";
 
-export default function HomeScreen() {
+export default function HomeScreen({ route }) {
   const [recording, setRecording] = useState(null);
   const [recordingUri, setRecordingUri] = useState(null);
   const [transcription, setTranscription] = useState("");
+  const [microphoneAllowed, setMicrophoneAllowed] = useState(
+    route?.params?.microphoneAllowed ?? null
+  );
 
   useEffect(() => {
-    requestPermissions();
     clearCache();
   }, []);
 
   const requestPermissions = async () => {
     const { status } = await Audio.requestPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission Denied", "Microphone access is required!");
+    if (status === "granted") {
+      setMicrophoneAllowed(true);
+    } else {
+      setMicrophoneAllowed(false);
     }
   };
 
   const startRecording = async () => {
+    if (microphoneAllowed === null) {
+      requestPermissions();
+      return;
+    }
+
+    if (!microphoneAllowed) {
+      Alert.alert(
+        "Permission Denied",
+        "Microphone access is required! Please enable it in settings."
+      );
+      return;
+    }
+
     try {
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
@@ -208,7 +225,7 @@ const styles = StyleSheet.create({
   },
   transcription: {
     marginTop: 20,
-    fontSize: 16,
+    fontSize: 16, 
     fontStyle: "italic",
     textAlign: "center",
   },

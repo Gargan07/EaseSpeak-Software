@@ -1,26 +1,59 @@
-import React, { useState } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Button, StyleSheet, Alert } from "react-native";
 
 const TutorialScreen = ({ navigation }) => {
   const [step, setStep] = useState(0);
+  const [microphoneAllowed, setMicrophoneAllowed] = useState(null);
+
+  const requestMicrophonePermission = () => {
+    setTimeout(() => {
+      Alert.alert(
+        '"EASE SPEAK" Would Like To Access The Microphone',
+        "Allow EASE SPEAK to access your microphone to start recording.",
+        [
+          {
+            text: "Don't Allow",
+            style: "cancel",
+            onPress: () => {
+              console.log("Microphone permission denied");
+              setMicrophoneAllowed(false);
+            },
+          },
+          {
+            text: "Allow",
+            onPress: () => {
+              console.log("Microphone permission granted");
+              setMicrophoneAllowed(true);
+            },
+          },
+        ]
+      );
+    }, 500); // Small delay ensures the alert is triggered properly
+  };
+
+  useEffect(() => {
+    if (step === 1 && microphoneAllowed === null) {
+      requestMicrophonePermission();
+    }
+  }, [step]);
 
   const nextStep = () => {
     if (step < 2) {
-      setStep(step + 1);
+      setStep((prevStep) => prevStep + 1);
     } else {
-      navigation.replace("Home"); // Directs to HomeScreen after the last tutorial step
+      navigation.replace("Home", { microphoneAllowed });
     }
   };
 
   const skipTutorial = () => {
-    navigation.replace("Home"); // Skips tutorial and goes directly to Home
+    navigation.replace("Home", { microphoneAllowed });
   };
 
   return (
     <View style={styles.container}>
       {step === 0 && <Text style={styles.text}>Step 1: Use a good microphone.</Text>}
-      {step === 1 && <Text style={styles.text}>Step 2: Tap the microphone icon to begin recording</Text>}
-      {step === 2 && <Text style={styles.text}>Step 3: Review the transcribe text on your screen.</Text>}
+      {step === 1 && <Text style={styles.text}>Step 2: Tap the microphone icon to begin recording.</Text>}
+      {step === 2 && <Text style={styles.text}>Step 3: Review the transcribed text on your screen.</Text>}
 
       <View style={styles.buttonContainer}>
         {step < 2 ? (

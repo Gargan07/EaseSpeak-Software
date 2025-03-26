@@ -20,11 +20,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#895FFF", // Updated background color
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: 300, // Increased size
+    height: 300, // Increased size
     resizeMode: "contain",
   },
 });
