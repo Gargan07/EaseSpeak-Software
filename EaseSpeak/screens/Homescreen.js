@@ -114,7 +114,7 @@ export default function HomeScreen({ route }) {
     });
 
     try {
-      const response = await fetch("http://192.168.100.2:8000/transcribe/", {
+      const response = await fetch("http://192.168.1.5:8000/transcribe/", {
         method: "POST",
         body: formData,
         headers: {
@@ -147,7 +147,7 @@ export default function HomeScreen({ route }) {
 
   const testConnection = async () => {
     try {
-      const response = await fetch("http://192.168.100.2:8000/test/", {
+      const response = await fetch("http://192.168.1.5:8000/test/", {
         method: "GET",
       });
       if (response.ok) {
@@ -270,38 +270,33 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     color: "white",
-    marginTop: 20, // Increase spacing below the mic button
+    marginTop: 20, 
     marginBottom: 20,
   },
   transcriptionBox: {
     position: "absolute",
     bottom: 0,
-    width: "100%",
-    minHeight: 550, // Increased height for buttons
-    backgroundColor: "white",
+    width: "114%",
+    minHeight: 350,
+    backgroundColor: "white", 
     paddingTop: 25,
-    paddingBottom: 20, // Ensuring enough space for buttons
-    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 0,
     alignItems: "center",
-    justifyContent: "space-between", // Adjusts spacing
+    justifyContent: "space-between",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
   },
   transcriptionText: {
-    fontSize: 18,
-    color: "#333",
-    textAlign: "center",
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 10,
-  },
+    color: "black",
+    textAlign: "center",
+    width: "95%",
+  },  
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "space-between", // Distributes buttons evenly
+    justifyContent: "space-between", 
     width: "100%",
     paddingHorizontal: 10,
   },
@@ -313,32 +308,24 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   saveButton: {
-    borderWidth: 3,
-    borderColor: "#895FFF",
-    backgroundColor: "transparent", // Outline style
+    backgroundColor: "#895FFF",
     padding: 10,
     borderRadius: 8,
   },
   redoButton: {
-    borderWidth: 3,
-    borderColor: "#FFA500",
-    backgroundColor: "transparent",
+    backgroundColor: "#FFA500",
     padding: 10,
     borderRadius: 8,
   },
   testButton: {
-    borderWidth: 3,
-    borderColor: "#E84855",
-    backgroundColor: "transparent",
+    backgroundColor: "#E84855",
     padding: 10,
     borderRadius: 8,
   },
   buttonText: {
-    color: "#000000", // Matches the border color
+    color: "#FFFFFF", // White text for contrast
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
   },
 });
-
-
