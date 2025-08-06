@@ -5,7 +5,7 @@ import torch
 import soundfile as sf
 
 # Load model and processor
-processor = Wav2Vec2Processor.from_pretrained("./wav2vec2-disfluency-model-v4-7")
+processor = Wav2Vec2Processor.from_pretrained("Gargan07/wav2vec2-disfluency-model")
 session = ort.InferenceSession("model/wav2vec2-quant-dynamic.onnx")
 
 # Load audio
