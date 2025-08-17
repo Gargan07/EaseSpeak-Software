@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   StyleSheet,
   StatusBar,
   Alert,
+  Animated,
+  ActivityIndicator,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Clipboard from "expo-clipboard";
@@ -24,6 +26,10 @@ export default function HomeScreen({ route }) {
     route?.params?.microphoneAllowed ?? null
   );
 
+  const [loading, setLoading] = useState(false);
+  // Animation values
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
     clearCache();
   }, []);
@@ -31,6 +37,20 @@ export default function HomeScreen({ route }) {
   const requestPermissions = async () => {
     const { status } = await Audio.requestPermissionsAsync();
     setMicrophoneAllowed(status === "granted");
+  };
+
+  const safeFetch = async (url, options, retries = 2, delay = 1000) => {
+    try {
+      return await fetch(url, options);
+    } catch (err) {
+      if (retries > 0) {
+        console.warn(`Retrying... attempts left: ${retries}`);
+        // wait before retrying
+        await new Promise((res) => setTimeout(res, delay));
+        return safeFetch(url, options, retries - 1, delay);
+      }
+      throw err;
+    }
   };
 
   const startRecording = async () => {
@@ -76,6 +96,9 @@ export default function HomeScreen({ route }) {
 
       await newRecording.startAsync();
       setRecording(newRecording);
+
+      // Start the pulsing effect
+      startPulseAnimation();
     } catch (error) {
       console.error("Error starting recording:", error);
     }
@@ -83,14 +106,52 @@ export default function HomeScreen({ route }) {
 
   const stopRecording = async () => {
     try {
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
-      setRecordingUri(uri);
-      setRecording(null);
-      console.log("Recording saved at:", uri);
+      if (!recording) {
+        console.warn("⚠️ No active recording to stop.");
+        stopPulseAnimation(); // Always reset animation
+        setRecording(null); // Ensure UI resets
+        return;
+      }
+
+      // Check if it's actually recording
+      const status = await recording.getStatusAsync();
+      if (status.isRecording) {
+        await recording.stopAndUnloadAsync();
+        const uri = recording.getURI();
+        setRecordingUri(uri);
+        console.log("✅ Recording saved at:", uri);
+      } else {
+        console.warn("⚠️ Recording already stopped.");
+      }
+
+      setRecording(null); // Reset state
     } catch (error) {
       console.error("Error stopping recording:", error);
+    } finally {
+      stopPulseAnimation(); // Ensure pulse always stops
     }
+  };
+
+  const startPulseAnimation = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  };
+
+  const stopPulseAnimation = () => {
+    pulseAnim.stopAnimation();
+    pulseAnim.setValue(1); // Reset scale
   };
 
   const uploadAudio = async () => {
@@ -105,6 +166,8 @@ export default function HomeScreen({ route }) {
       return;
     }
 
+    setLoading(true); // Show loading spinner
+
     const formData = new FormData();
     formData.append("file", {
       uri: recordingUri,
@@ -112,8 +175,9 @@ export default function HomeScreen({ route }) {
       type: "audio/wav",
     });
 
+    // const response = await fetch("http://192.168.1.9:8000/transcribe/"
     try {
-      const response = await fetch("http://192.168.1.5:8000/transcribe/", {
+      const response = await safeFetch("http://192.168.1.4:8000/transcribe/", {
         method: "POST",
         body: formData,
         headers: {
@@ -121,18 +185,33 @@ export default function HomeScreen({ route }) {
         },
       });
 
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Server error ${response.status}: ${errText}`);
+      }
+
       const data = await response.json();
       setTranscription(
         data.cleaned_transcription || "No transcription available"
       );
       console.log(transcription);
 
-      await FileSystem.deleteAsync(recordingUri, { idempotent: true });
-      console.log("Deleted recorded file:", recordingUri);
+      setTimeout(async () => {
+        try {
+          await FileSystem.deleteAsync(recordingUri, { idempotent: true });
+          console.log("Deleted recorded file:", recordingUri);
+          setRecordingUri(null);
+        } catch (deleteErr) {
+          console.error("Error deleting file:", deleteErr);
+        }
+      }, 1000); // delay by 1 second
+
       setRecordingUri(null);
     } catch (error) {
       console.error("Error uploading audio:", error);
-      Alert.alert("Upload Failed", "Could not upload audio.");
+      // Alert.alert("Upload Failed", "Could not upload audio.");
+    } finally {
+      setLoading(false); // Hide loading spinner
     }
   };
 
@@ -201,8 +280,12 @@ export default function HomeScreen({ route }) {
 
       <View style={styles.container}>
         {/* Microphone Button */}
+        {/* Mic Button with Pulsing Effect */}
         <TouchableOpacity
-          style={styles.micButton}
+          style={[
+            styles.micButton,
+            { transform: [{ scale: pulseAnim }] }, // Apply animation here
+          ]}
           onPress={recording ? stopRecording : startRecording}
         >
           <FontAwesome5 name="microphone" size={40} color="#6357F6" />
@@ -212,11 +295,18 @@ export default function HomeScreen({ route }) {
           {recording ? "Listening..." : "Ready to listen..."}
         </Text>
 
+        <View style={styles.transcriptionLabelContainer}>
+          <Text style={styles.transcriptionLabel}>Transcription</Text>
+        </View>
         {/* Transcription Box */}
         <View style={styles.transcriptionBox}>
-          <Text style={styles.transcriptionText}>
-            {transcription || "No transcription available"}
-          </Text>
+          {loading ? (
+            <ActivityIndicator size="large" color="#895FFF" />
+          ) : (
+            <Text style={styles.transcriptionText}>
+              {transcription || "No transcription available"}
+            </Text>
+          )}
 
           {/* Buttons */}
           <View style={styles.buttonRow}>
@@ -348,5 +438,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  transcriptionLabelContainer: {
+    position: "absolute",
+    bottom: 330 + 20, // match transcriptionBox height + spacing
+    alignSelf: "center",
+    backgroundColor: "#895FFF", // same as screen background
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+
+  transcriptionLabel: {
+    fontSize: 25,
+    fontWeight: "bold",
+    color: "white",
   },
 });
