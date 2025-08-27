@@ -177,13 +177,16 @@ export default function HomeScreen({ route }) {
 
     // const response = await fetch("http://192.168.1.9:8000/transcribe/"
     try {
-      const response = await safeFetch("http://192.168.1.4:8000/transcribe/", {
-        method: "POST",
-        body: formData,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await safeFetch(
+        "http://192.168.1.4:8000/transcribe/?engine=wav2vec2",
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (!response.ok) {
         const errText = await response.text();

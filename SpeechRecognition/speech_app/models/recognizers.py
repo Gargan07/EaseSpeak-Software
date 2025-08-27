@@ -1,5 +1,6 @@
 import numpy as np
 import onnxruntime as ort
+import speech_recognition as sr
 from transformers import Wav2Vec2Processor
 from utils.audio_utils import load_audio
 from models.base_recognizer import SpeechRecognizer
@@ -27,3 +28,19 @@ class Wav2Vec2OnnxRecognizer(SpeechRecognizer):
         predicted_ids = np.argmax(logits, axis=-1)
         transcription = self.processor.batch_decode(predicted_ids)[0]
         return transcription
+
+class HmmRecognizer(SpeechRecognizer):
+    def __init__(self):
+        self.recognizer = sr.Recognizer()
+
+    def transcribe(self, audio_path: str) -> str:
+        try:
+            with sr.AudioFile(audio_path) as source:
+                audio = self.recognizer.record(source)
+            raw_text = self.recognizer.recognize_sphinx(audio)
+        except sr.UnknownValueError:
+            raw_text = ""
+        except sr.RequestError as e:
+            raw_text = f"Recognizer error: {e}"
+
+        return raw_text
