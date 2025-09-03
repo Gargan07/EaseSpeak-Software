@@ -8,6 +8,9 @@ import {
   Alert,
   Animated,
   ActivityIndicator,
+  TextInput,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Clipboard from "expo-clipboard";
@@ -178,7 +181,7 @@ export default function HomeScreen({ route }) {
     // const response = await fetch("http://192.168.1.9:8000/transcribe/"
     try {
       const response = await safeFetch(
-        "http://192.168.1.4:8000/transcribe/?engine=wav2vec2",
+        "http://192.168.1.2:8000/transcribe/?engine=wav2vec2",
         {
           method: "POST",
           body: formData,
@@ -273,70 +276,78 @@ export default function HomeScreen({ route }) {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" />
 
-      {/* Logo at the top */}
-      <View style={styles.logoContainer}>
-        <Image source={require("../assets/logo.png")} style={styles.logo} />
-      </View>
-
-      <View style={styles.container}>
-        {/* Microphone Button */}
-        {/* Mic Button with Pulsing Effect */}
-        <TouchableOpacity
-          style={[
-            styles.micButton,
-            { transform: [{ scale: pulseAnim }] }, // Apply animation here
-          ]}
-          onPress={recording ? stopRecording : startRecording}
-        >
-          <FontAwesome5 name="microphone" size={40} color="#6357F6" />
-        </TouchableOpacity>
-
-        <Text style={styles.statusText}>
-          {recording ? "Listening..." : "Ready to listen..."}
-        </Text>
-
-        <View style={styles.transcriptionLabelContainer}>
-          <Text style={styles.transcriptionLabel}>Transcription</Text>
+        {/* Logo at the top */}
+        <View style={styles.logoContainer}>
+          <Image source={require("../assets/logo.png")} style={styles.logo} />
         </View>
-        {/* Transcription Box */}
-        <View style={styles.transcriptionBox}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#895FFF" />
-          ) : (
-            <Text style={styles.transcriptionText}>
-              {transcription || "No transcription available"}
-            </Text>
-          )}
 
-          {/* Buttons */}
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              style={[styles.button, styles.saveButton]}
-              onPress={uploadAudio}
-            >
-              <Text style={styles.buttonText}>Save</Text>
-            </TouchableOpacity>
+        <View style={styles.container}>
+          {/* Microphone Button */}
+          {/* Mic Button with Pulsing Effect */}
+          <TouchableOpacity
+            style={[
+              styles.micButton,
+              { transform: [{ scale: pulseAnim }] }, // Apply animation here
+            ]}
+            onPress={recording ? stopRecording : startRecording}
+          >
+            <FontAwesome5 name="microphone" size={40} color="#6357F6" />
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.button, styles.redoButton]}
-              onPress={redoRecording}
-            >
-              <Text style={styles.buttonText}>Redo</Text>
-            </TouchableOpacity>
+          <Text style={styles.statusText}>
+            {recording ? "Listening..." : "Ready to listen..."}
+          </Text>
 
-            <TouchableOpacity
-              style={[styles.button, styles.testButton]}
-              onPress={testConnection}
-            >
-              <Text style={styles.buttonText}>Copy</Text>
-            </TouchableOpacity>
+          <View style={styles.transcriptionLabelContainer}>
+            <Text style={styles.transcriptionLabel}>Transcription</Text>
+          </View>
+          {/* Transcription Box */}
+          <View style={styles.transcriptionBox}>
+            {loading ? (
+              <ActivityIndicator size="large" color="#895FFF" />
+            ) : (
+              <TextInput
+                style={styles.transcriptionText}
+                value={transcription}
+                onChangeText={setTranscription} // Updates state while typing
+                placeholder="No transcription available"
+                multiline
+                editable
+                textAlign="center"
+              />
+            )}
+
+            {/* Buttons */}
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.button, styles.saveButton]}
+                onPress={uploadAudio}
+              >
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, styles.redoButton]}
+                onPress={redoRecording}
+              >
+                <Text style={styles.buttonText}>Redo</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, styles.testButton]}
+                onPress={testConnection}
+              >
+                <Text style={styles.buttonText}>Copy</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
