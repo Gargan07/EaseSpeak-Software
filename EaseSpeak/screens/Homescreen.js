@@ -32,7 +32,7 @@ export default function HomeScreen({ route }) {
   const [loading, setLoading] = useState(false);
   // Animation values
   const pulseAnim = useRef(new Animated.Value(1)).current;
-
+  const [alreadyAsked, setAlreadyAsked] = useState(false);
   useEffect(() => {
     clearCache();
   }, []);
@@ -71,6 +71,16 @@ export default function HomeScreen({ route }) {
     }
 
     try {
+      // If there’s already an active recording, stop it first
+      if (recording) {
+        try {
+          await recording.unloadAsync();
+        } catch (err) {
+          console.warn("No active recording to stop:", err);
+        }
+        setRecording(null);
+      }
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
@@ -102,6 +112,44 @@ export default function HomeScreen({ route }) {
 
       // Start the pulsing effect
       startPulseAnimation();
+
+      const intervalId = setInterval(async () => {
+        const status = await newRecording.getStatusAsync();
+
+        if (alreadyAsked === false && status.metering !== undefined) {
+          if (status.metering > -45) {
+            Alert.alert(
+              "Too Loud!",
+              "Noise level is too high. Do you still want to continue?",
+              [
+                {
+                  text: "Cancel",
+                  style: "cancel",
+                  onPress: async () => {
+                    await newRecording.stopAndUnloadAsync();
+                    stopPulseAnimation();
+                    setRecording(null);
+                  },
+                },
+                {
+                  text: "OK",
+                  onPress: async () => {
+                    setAlreadyAsked(true);
+                    await newRecording.stopAndUnloadAsync();
+                    stopPulseAnimation();
+                    setRecording(null);
+                  },
+                },
+              ]
+            );
+          }
+        }
+      }, 500);
+
+      // Stop checking after 2 seconds
+      setTimeout(() => {
+        clearInterval(intervalId);
+      }, 1500);
     } catch (error) {
       console.error("Error starting recording:", error);
     }
@@ -181,7 +229,7 @@ export default function HomeScreen({ route }) {
     // const response = await fetch("http://192.168.1.9:8000/transcribe/"
     try {
       const response = await safeFetch(
-        "http://192.168.1.2:8000/transcribe/?engine=wav2vec2",
+        "http://192.168.1.7:8000/transcribe/?engine=wav2vec2",
         {
           method: "POST",
           body: formData,
