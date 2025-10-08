@@ -11,6 +11,7 @@ import {
   TextInput,
   Keyboard,
   TouchableWithoutFeedback,
+  Vibration,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Clipboard from "expo-clipboard";
@@ -40,6 +41,21 @@ export default function HomeScreen({ route }) {
   const requestPermissions = async () => {
     const { status } = await Audio.requestPermissionsAsync();
     setMicrophoneAllowed(status === "granted");
+  };
+
+  const playAlertSound = async () => {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require("../assets/alert.mp3")
+      );
+      await sound.playAsync();
+      // Optionally unload after playing
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.didJustFinish) sound.unloadAsync();
+      });
+    } catch (error) {
+      console.error("Error playing alert sound:", error);
+    }
   };
 
   const safeFetch = async (url, options, retries = 2, delay = 1000) => {
@@ -118,9 +134,12 @@ export default function HomeScreen({ route }) {
 
         if (alreadyAsked === false && status.metering !== undefined) {
           if (status.metering > -45) {
+            playAlertSound();
+            Vibration.vibrate();
+
             Alert.alert(
-              "Too Loud!",
-              "Noise level is too high. Do you still want to continue?",
+              "Too Noisy!",
+              "Do you still want to continue recording?",
               [
                 {
                   text: "Cancel",
@@ -229,7 +248,7 @@ export default function HomeScreen({ route }) {
     // const response = await fetch("http://192.168.1.9:8000/transcribe/"
     try {
       const response = await safeFetch(
-        "http://192.168.1.7:8000/transcribe/?engine=wav2vec2",
+        "http://192.168.1.8:8000/transcribe/?engine=wav2vec2",
         {
           method: "POST",
           body: formData,
@@ -375,7 +394,7 @@ export default function HomeScreen({ route }) {
                 style={[styles.button, styles.saveButton]}
                 onPress={uploadAudio}
               >
-                <Text style={styles.buttonText}>Save</Text>
+                <Text style={styles.buttonText}>Transcribe</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
