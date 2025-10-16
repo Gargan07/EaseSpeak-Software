@@ -44,7 +44,7 @@ def process_transcription(temp_file_path: str, recognizer: SpeechRecognizer):
     print("🔍 Checking for voice activity...")
     if not has_voice(wav_path):
         os.remove(temp_file_path)  # cleanup
-        os.remove(wav_path)
+        # os.remove(wav_path)
         print("No voice detected — skipping transcription.")
         return {
             "raw_transcription": "",

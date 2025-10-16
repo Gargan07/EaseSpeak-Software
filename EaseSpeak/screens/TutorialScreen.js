@@ -8,7 +8,7 @@ const TutorialScreen = ({ navigation }) => {
   const requestMicrophonePermission = () => {
     Alert.alert(
       '"EASE SPEAK" Would Like To Access The Microphone',
-      'Allow EASE SPEAK to access your microphone to start recording.',
+      "Allow EASE SPEAK to access your microphone to start recording.",
       [
         {
           text: "Don't Allow",
@@ -27,7 +27,7 @@ const TutorialScreen = ({ navigation }) => {
     if (step === 0) {
       Alert.alert(
         '"EASE SPEAK" Would Like To Access The Microphone',
-        'Allow EASE SPEAK to access your microphone to start recording.',
+        "Allow EASE SPEAK to access your microphone to start recording.",
         [
           {
             text: "Don't Allow",
@@ -51,7 +51,6 @@ const TutorialScreen = ({ navigation }) => {
       }
     }
   };
-  
 
   const skipTutorial = () => {
     navigation.replace("Home");
@@ -67,14 +66,24 @@ const TutorialScreen = ({ navigation }) => {
       )}
       {step === 1 && (
         <View style={styles.stepContainer}>
-          <Image source={require("../assets/step2.png")} style={styles.step2Image} />
-          <Text style={styles.text}>Step 2: Tap the microphone icon to begin recording</Text>
+          <Image
+            source={require("../assets/step2.png")}
+            style={styles.step2Image}
+          />
+          <Text style={styles.text}>
+            Step 2: Tap the microphone icon to begin recording
+          </Text>
         </View>
       )}
       {step === 2 && (
         <View style={styles.stepContainer}>
-          <Image source={require("../assets/step3.png")} style={styles.step3Image} />
-          <Text style={styles.text}>Step 3: Review the transcribed text on your screen.</Text>
+          <Image
+            source={require("../assets/step3.png")}
+            style={styles.step3Image}
+          />
+          <Text style={styles.text}>
+            Step 3: Review the transcribed text on your screen.
+          </Text>
         </View>
       )}
 
@@ -84,7 +93,10 @@ const TutorialScreen = ({ navigation }) => {
           {[0, 1, 2].map((index) => (
             <View
               key={index}
-              style={[styles.indicator, step === index && styles.activeIndicator]}
+              style={[
+                styles.indicator,
+                step === index && styles.activeIndicator,
+              ]}
             />
           ))}
         </View>
