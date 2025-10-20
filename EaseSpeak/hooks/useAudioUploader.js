@@ -29,7 +29,7 @@ export function useAudioUploader(setTranscription) {
 
     try {
       const response = await safeFetch(
-        "http://192.168.1.2:8000/transcribe/?engine=wav2vec2",
+        "https://karla-streamlined-nonreflectively.ngrok-free.dev/transcribe/?engine=wav2vec2",
         {
           method: "POST",
           body: formData,

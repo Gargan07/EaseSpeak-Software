@@ -2,24 +2,32 @@ import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 
 export default function ActionButtons({ onTranscribe, onRedo, onCopy }) {
-  return React.createElement(
-    View,
-    { style: styles.buttonRow },
-    React.createElement(
-      TouchableOpacity,
-      { style: [styles.button, styles.saveButton], onPress: onTranscribe },
-      React.createElement(Text, { style: styles.buttonText }, "Transcribe")
-    ),
-    React.createElement(
-      TouchableOpacity,
-      { style: [styles.button, styles.redoButton], onPress: onRedo },
-      React.createElement(Text, { style: styles.buttonText }, "Redo")
-    ),
-    React.createElement(
-      TouchableOpacity,
-      { style: [styles.button, styles.testButton], onPress: onCopy },
-      React.createElement(Text, { style: styles.buttonText }, "Copy")
-    )
+  return (
+    <View style={styles.buttonRow}>
+      <TouchableOpacity
+        testID="transcribe-button"
+        style={[styles.button, styles.saveButton]}
+        onPress={onTranscribe}
+      >
+        <Text style={styles.buttonText}>Transcribe</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        testID="redo-button"
+        style={[styles.button, styles.redoButton]}
+        onPress={onRedo}
+      >
+        <Text style={styles.buttonText}>Redo</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        testID="copy-button"
+        style={[styles.button, styles.testButton]}
+        onPress={onCopy}
+      >
+        <Text style={styles.buttonText}>Copy</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 

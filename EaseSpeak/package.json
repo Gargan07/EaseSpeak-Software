@@ -7,33 +7,32 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "jest"
+  },
+  "jest": {
+    "preset": "jest-expo"
   },
   "dependencies": {
     "@react-navigation/native": "^7.0.17",
     "@react-navigation/stack": "^7.2.1",
-    "axios": "^1.8.3",
     "expo": "^53.0.23",
     "expo-av": "^15.1.7",
     "expo-clipboard": "^7.1.5",
     "expo-document-picker": "^13.1.6",
     "expo-file-system": "^18.1.11",
-    "expo-permissions": "^14.4.0",
-    "expo-splash-screen": "^0.30.10",
-    "expo-status-bar": "~2.2.3",
-    "ffmpeg-kit-react-native": "^6.0.2",
     "react": "^19.0.0",
-    "react-native": "^0.79.5",
+    "react-native": "^0.79.6",
     "react-native-audio-recorder-player": "^3.6.12",
     "react-native-fs": "^2.20.0",
-    "react-native-gesture-handler": "^2.24.0",
-    "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "^4.11.1",
     "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@testing-library/react-native": "^13.3.3",
+    "jest-expo": "^53.0.10"
   },
   "private": true
 }

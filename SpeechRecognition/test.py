@@ -10,7 +10,7 @@ from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
 # Load pre-trained Wav2Vec2 model
 #model_name = "./wav2vec2-disfluency-model-v3"
-model_name = "wav2vec2-disfluency-model-v4-6"
+model_name = "wav2vec2-disfluency-model-v4-7"
 processor = Wav2Vec2Processor.from_pretrained(model_name)
 model = Wav2Vec2ForCTC.from_pretrained(model_name)
 
@@ -121,5 +121,5 @@ def process_speech(audio_path):
 # Example usage
 if __name__ == "__main__":
     # Update the path to your specific audio file location
-    audio_file = "F:/EaseSpeak-Software-woody/SpeechRecognition/DataSet/Recording (90).wav"  # Ensure this path is correct
+    audio_file = "F:/EaseSpeak-Software-woody/SpeechRecognition/zData/Recording (20).m4a"  # Ensure this path is correct
     process_speech(audio_file)
