@@ -17,7 +17,7 @@ Manual install watch this:
 https://www.youtube.com/watch?v=DMEP82yrs5g
 
 COMMAND FOR THE BACKEND SERVER:
-uvicorn server:app --host 0.0.0.0 --port 8000
+uvicorn main:app --host 0.0.0.0 --port 8000
 ngrok http --domain=karla-streamlined-nonreflectively.ngrok-free.dev 8000
 
 ONNX LINK:
