@@ -1,3 +1,7 @@
+import os
+import re
+import joblib
+import librosa
 import numpy as np
 import onnxruntime as ort
 import speech_recognition as sr
@@ -44,3 +48,69 @@ class HmmRecognizer(SpeechRecognizer):
             raw_text = f"Recognizer error: {e}"
 
         return raw_text
+
+class GmmRecognizer(SpeechRecognizer):
+    """GMM-based speech recognizer for phoneme/unit decoding."""
+
+    def __init__(self, gmm_model_path: str):
+        if not os.path.exists(gmm_model_path):
+            raise FileNotFoundError(f"GMM model not found: {gmm_model_path}")
+
+        try:
+            gmm_data = joblib.load(gmm_model_path)
+            self.gmm_models = gmm_data["gmm_models"]
+            self.label_encoder = gmm_data["label_encoder"]
+            # Create mapping from index → label for decoding
+            self.label_map = {
+                i: label for i, label in enumerate(self.label_encoder.classes_)
+            }
+            print("✅ GMM Recognizer loaded successfully.")
+        except Exception as e:
+            raise RuntimeError(f"Failed to load GMM model: {e}")
+
+    def extract_features(self, audio_path: str):
+        """Extract MFCC features from the given audio file."""
+        try:
+            y, sr = librosa.load(audio_path, sr=16000)
+            mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+            return mfcc.T  # (frames, features)
+        except Exception as e:
+            print(f"Error extracting features: {e}")
+            return np.empty((0, 13))
+
+    def gmm_predict_all_models(self, features: np.ndarray):
+        """Run each GMM model on frames and pick the best scoring one."""
+        if features.size == 0:
+            return np.array([])
+
+        scores = []
+        for label, gmm in self.gmm_models.items():
+            try:
+                score = gmm.score_samples(features)  # log-likelihood per frame
+            except Exception:
+                score = np.full(features.shape[0], -np.inf)
+            scores.append(score)
+
+        scores = np.array(scores)  # (num_models, num_frames)
+        best_labels = np.argmax(scores, axis=0)
+        return best_labels
+
+    def decode_predictions(self, predictions: np.ndarray) -> str:
+        """Convert predicted label indices into a text sequence."""
+        if predictions.size == 0:
+            return ""
+        chars = [self.label_map.get(p, "") for p in predictions]
+        text = "".join(chars)
+        text = re.sub(r"(.)\1+", r"\1", text)  # collapse repeats
+        return text.strip()
+
+    def transcribe(self, audio_path: str) -> str:
+        """Main GMM transcription pipeline."""
+        try:
+            features = self.extract_features(audio_path)
+            predictions = self.gmm_predict_all_models(features)
+            raw_text = self.decode_predictions(predictions)
+            return raw_text
+        except Exception as e:
+            print(f"GMM Transcription error: {e}")
+            return ""
