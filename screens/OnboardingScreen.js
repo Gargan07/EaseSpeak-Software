@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, Button, StyleSheet, TouchableOpacity, Animated, Image } from "react-native";
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  Image,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 const PURPLE = "#895FFF";
@@ -78,27 +86,39 @@ const OnboardingScreen = ({ navigation }) => {
         </TouchableOpacity>
       )}
 
-      <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], alignItems: "center", marginTop: -50 }}>
+      <Animated.View
+        style={{
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+          alignItems: "center",
+          marginTop: -50,
+        }}
+      >
         {step === 0 && <Text style={styles.text}>Let's Get Started</Text>}
 
         {step === 1 && (
           <View style={styles.aboutContainer}>
-            <Image source={require("../assets/aboutpic.png")} style={styles.image} />
-            
-            {/* Keep Communicate and Animated Word on the Same Line */}
+            <Image
+              source={require("../assets/aboutpic.png")}
+              style={styles.image}
+            />
+
             <View style={styles.textRow}>
               <Text style={styles.text}>Communicate </Text>
-              <Animated.Text style={[styles.animatedWord, { opacity: wordAnim }]}>
+              <Animated.Text
+                style={[styles.animatedWord, { opacity: wordAnim }]}
+              >
                 {words[currentWordIndex]}
               </Animated.Text>
             </View>
-            
-            {/* "with Ease Speak" on a Separate Line */}
+
             <Text style={styles.text}>with Ease Speak</Text>
 
             <Text style={styles.aboutText}>
-              Ease Speak is an advanced speech recognition system designed to support individuals with stuttering and speech impairments.
-              Using cutting-edge technology, Ease Speak offers real-time assistance to improve communication and boost confidence.
+              Ease Speak is an advanced speech recognition system designed to
+              support individuals with stuttering and speech impairments. Using
+              cutting-edge technology, Ease Speak offers real-time assistance to
+              improve communication and boost confidence.
             </Text>
           </View>
         )}
@@ -106,7 +126,10 @@ const OnboardingScreen = ({ navigation }) => {
         {step === 2 && (
           <View style={{ alignItems: "center" }}>
             <Text style={styles.text}>Welcome to Ease Speak!</Text>
-            <Text style={styles.subText}>Let’s set things up—just a few simple steps before you're ready to go!</Text>
+            <Text style={styles.subText}>
+              Let’s set things up—just a few simple steps before you're ready to
+              go!
+            </Text>
           </View>
         )}
       </Animated.View>
@@ -157,7 +180,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -80
+    marginTop: -80,
   },
   animatedWord: {
     fontSize: 24,
@@ -168,7 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     color: BLACK,
-    marginTop: 10
+    marginTop: 10,
   },
   aboutText: {
     fontSize: 16,

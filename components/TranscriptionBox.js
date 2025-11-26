@@ -5,7 +5,9 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ActionButtons from "./ActionButtons";
 
 export default function TranscriptionBox({
@@ -16,63 +18,91 @@ export default function TranscriptionBox({
   onRedo,
   onCopy,
 }) {
-  return (
-    <View style={styles.transcriptionBox}>
-      {/* Fixed label at top */}
-      <Text style={styles.transcriptionLabel}>Transcription</Text>
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isTablet = width > 600;
 
-      {/* Text input or loader */}
+  return (
+    <View
+      style={[
+        styles.wrapper,
+        {
+          paddingBottom: (isTablet ? -10 : -20) + insets.bottom, // respect safe area
+          paddingTop: isTablet ? 30 : 20,
+          minHeight: isTablet ? 470 : 350,
+          maxWidth: 700,
+        },
+      ]}
+    >
+      {/* Label Floating Above Box */}
+      <Text
+        style={[styles.transcriptionLabel, { fontSize: isTablet ? 36 : 28 }]}
+      >
+        Transcription
+      </Text>
+
+      {/* Loader or Editable Text */}
       {loading ? (
         <ActivityIndicator size="large" color="#895FFF" />
       ) : (
         <TextInput
-          style={styles.transcriptionText}
+          style={[
+            styles.transcriptionText,
+            {
+              fontSize: isTablet ? 24 : 18,
+              width: "92%",
+              maxHeight: height * 0.25,
+            },
+          ]}
           value={transcription}
           onChangeText={setTranscription}
           placeholder="No transcription available"
           multiline
           textAlign="center"
+          blurOnSubmit
         />
       )}
 
-      {/* Action buttons */}
-      <ActionButtons
-        onTranscribe={uploadAudio}
-        onRedo={onRedo}
-        onCopy={onCopy}
-      />
+      {/* Buttons */}
+      <View style={{ width: "100%", marginTop: 10 }}>
+        <ActionButtons
+          onTranscribe={uploadAudio}
+          onRedo={onRedo}
+          onCopy={onCopy}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  transcriptionBox: {
+  wrapper: {
     position: "absolute",
-    bottom: 50,
-    width: "114%",
-    minHeight: 350,
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: "white",
-    paddingTop: 25, // leave space for the fixed label
-    paddingBottom: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     alignItems: "center",
     justifyContent: "space-between",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10, // Android shadow
   },
   transcriptionLabel: {
     position: "absolute",
-    top: -50, // fixed from top of the box
-    fontSize: 30,
+    top: -45,
     fontWeight: "bold",
     color: "#ffffff",
-    textAlign: "center",
     width: "100%",
+    textAlign: "center",
   },
   transcriptionText: {
-    fontSize: 22,
     fontWeight: "bold",
     color: "black",
     textAlign: "center",
-    width: "95%",
   },
 });

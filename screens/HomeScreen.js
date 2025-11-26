@@ -1,50 +1,92 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
-  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
   Keyboard,
+  TouchableWithoutFeedback,
   Alert,
+  useWindowDimensions,
 } from "react-native";
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import * as Clipboard from "expo-clipboard";
+
 import MicButton from "../components/MicButton";
 import TranscriptionBox from "../components/TranscriptionBox";
 import LogoHeader from "../components/LogoHeader";
+
 import { useAudioRecorder } from "../hooks/useAudioRecorder";
 import { useAudioUploader } from "../hooks/useAudioUploader";
 import { usePulseAnimation } from "../hooks/usePulseAnimation";
 import { clearCache } from "../services/fileUtils";
 
 export default function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const [transcription, setTranscription] = useState("");
+  const { width } = useWindowDimensions();
+  const isTablet = width > 600;
+
   const {
     recording,
     recordingUri,
     startRecording,
     stopRecording,
     setRecordingUri,
+    volumeLevel,
   } = useAudioRecorder();
+
   const { uploadAudio, loading } = useAudioUploader(setTranscription);
   const { pulseAnim, startPulse, stopPulse } = usePulseAnimation();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+  const SILENCE_THRESHOLD = -40; // quiet enough
+  const SILENCE_DURATION = 3000; // 3 seconds
+  const silenceStartRef = useRef(null);
 
   useEffect(() => {
     clearCache();
   }, []);
 
+  // --- AUTO STOP WHEN USER IS SILENT FOR 3 SECONDS ---
+  useEffect(() => {
+    if (!recording) return;
+
+    const interval = setInterval(() => {
+      if (volumeLevel !== null && volumeLevel < SILENCE_THRESHOLD) {
+        if (!silenceStartRef.current) {
+          silenceStartRef.current = Date.now();
+        } else {
+          const elapsed = Date.now() - silenceStartRef.current;
+          if (elapsed >= SILENCE_DURATION) {
+            stopRecording(stopPulse).then(() => {
+              if (recordingUri) {
+                uploadAudio(recordingUri, () => setRecordingUri(null));
+              }
+            });
+            silenceStartRef.current = null;
+            clearInterval(interval);
+          }
+        }
+      } else {
+        silenceStartRef.current = null;
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [recording, volumeLevel]);
+
   const handleMicPress = async () => {
-    if (isButtonDisabled) return; // ignore if button is temporarily disabled
-    setIsButtonDisabled(true); // disable for a moment
+    if (isButtonDisabled) return;
+    setIsButtonDisabled(true);
 
-    if (recording) {
-      await stopRecording(stopPulse);
-    } else {
-      await startRecording(startPulse, stopPulse);
-    }
+    recording
+      ? await stopRecording(stopPulse)
+      : await startRecording(startPulse, stopPulse);
 
-    // Re-enable the button after 1 second
     setTimeout(() => setIsButtonDisabled(false), 300);
   };
 
@@ -63,66 +105,72 @@ export default function HomeScreen() {
     Alert.alert("Copied", "Transcription copied to clipboard!");
   };
 
-  return React.createElement(
-    TouchableWithoutFeedback,
-    { onPress: Keyboard.dismiss, accessible: false },
-    React.createElement(
-      SafeAreaView,
-      { style: styles.safeArea },
-      React.createElement(LogoHeader, null),
-      React.createElement(
-        View,
-        { style: styles.container },
-        React.createElement(MicButton, {
-          isRecording: !!recording,
-          onPress: handleMicPress,
-          pulseAnim,
-          disabled: isButtonDisabled,
-        }),
-        React.createElement(
-          Text,
-          { style: styles.statusText },
-          recording ? "Listening..." : "Ready to listen..."
-        ),
-        React.createElement(TranscriptionBox, {
-          transcription,
-          setTranscription,
-          uploadAudio: () =>
-            uploadAudio(recordingUri, () => setRecordingUri(null)),
-          loading,
-          onRedo: handleRedo,
-          onCopy: handleCopy,
-        })
-      )
-    )
+  return (
+    <SafeAreaProvider>
+      <KeyboardAvoidingView
+        style={{ flex: 1, width: "100%", backgroundColor: "#895FFF" }}
+        behavior="height"
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View
+            style={[
+              styles.container,
+              { paddingBottom: insets.bottom, paddingTop: insets.top },
+            ]}
+          >
+            <LogoHeader />
+
+            <MicButton
+              isRecording={!!recording}
+              onPress={handleMicPress}
+              pulseAnim={pulseAnim}
+              disabled={isButtonDisabled}
+              size={isTablet ? width * 0.2 : width * 0.25}
+            />
+
+            <Text style={[styles.statusText, { fontSize: isTablet ? 20 : 16 }]}>
+              {!recording
+                ? "Press mic to start recording..."
+                : "Start talking..."}
+            </Text>
+
+            <View style={styles.bottomBoxWrapper}>
+              <TranscriptionBox
+                transcription={transcription}
+                setTranscription={setTranscription}
+                uploadAudio={() =>
+                  uploadAudio(recordingUri, () => setRecordingUri(null))
+                }
+                loading={loading}
+                onRedo={handleRedo}
+                onCopy={handleCopy}
+              />
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#895FFF",
-    alignItems: "center",
-    justifyContent: "flex-start",
-  },
   container: {
     flex: 1,
     width: "100%",
     alignItems: "center",
     justifyContent: "flex-start",
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
+    backgroundColor: "#895FFF",
   },
   statusText: {
-    fontSize: 16,
     color: "white",
-    marginTop: 20,
-    marginBottom: 20,
+    marginVertical: 20,
+    textAlign: "center",
   },
-  transcriptionLabel: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 10,
-    paddingTop: 120,
+  bottomBoxWrapper: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    flex: 1,
   },
 });

@@ -1,25 +1,72 @@
 import React from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
 
 export default function ActionButtons({ onTranscribe, onRedo, onCopy }) {
-  return React.createElement(
-    View,
-    { style: styles.buttonRow },
-    React.createElement(
-      TouchableOpacity,
-      { style: [styles.button, styles.saveButton], onPress: onTranscribe },
-      React.createElement(Text, { style: styles.buttonText }, "Transcribe")
-    ),
-    React.createElement(
-      TouchableOpacity,
-      { style: [styles.button, styles.redoButton], onPress: onRedo },
-      React.createElement(Text, { style: styles.buttonText }, "Redo")
-    ),
-    React.createElement(
-      TouchableOpacity,
-      { style: [styles.button, styles.testButton], onPress: onCopy },
-      React.createElement(Text, { style: styles.buttonText }, "Copy")
-    )
+  const { width } = useWindowDimensions();
+  const isTablet = width > 600;
+
+  return (
+    <View
+      style={[
+        styles.buttonRow,
+        {
+          paddingHorizontal: isTablet ? 20 : 10,
+          maxWidth: 700, // Prevent stretching on large screens
+          alignSelf: "center",
+        },
+      ]}
+    >
+      <TouchableOpacity
+        style={[
+          styles.button,
+          styles.saveButton,
+          {
+            paddingVertical: isTablet ? 18 : 12,
+          },
+        ]}
+        onPress={onTranscribe}
+      >
+        <Text style={[styles.buttonText, { fontSize: isTablet ? 20 : 16 }]}>
+          Transcribe
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.button,
+          styles.redoButton,
+          {
+            paddingVertical: isTablet ? 18 : 12,
+          },
+        ]}
+        onPress={onRedo}
+      >
+        <Text style={[styles.buttonText, { fontSize: isTablet ? 20 : 16 }]}>
+          Redo
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.button,
+          styles.testButton,
+          {
+            paddingVertical: isTablet ? 18 : 12,
+          },
+        ]}
+        onPress={onCopy}
+      >
+        <Text style={[styles.buttonText, { fontSize: isTablet ? 20 : 16 }]}>
+          Copy
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -28,21 +75,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    paddingHorizontal: 10,
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 5,
     alignItems: "center",
-    marginHorizontal: 5,
+    marginHorizontal: 6,
   },
   saveButton: { backgroundColor: "#895FFF" },
   redoButton: { backgroundColor: "#FFA500" },
   testButton: { backgroundColor: "#E84855" },
   buttonText: {
     color: "#FFFFFF",
-    fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
   },

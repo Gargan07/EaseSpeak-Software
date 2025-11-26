@@ -1,25 +1,36 @@
 import React from "react";
-import { View, Image, StyleSheet } from "react-native";
+import { View, Image, StyleSheet, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LogoHeader() {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
 
-  return React.createElement(
-    View,
-    {
-      style: [
+  const isTablet = width > 600;
+
+  // Logo size scales with screen width
+  const logoWidth = Math.min(width * 0.75, 500);
+  const logoHeight = logoWidth * 0.42; // keep proportions
+
+  return (
+    <View
+      style={[
         styles.logoContainer,
         {
-          paddingTop: Math.max(insets.top - 100, 0), // minimal safe padding
-          marginTop: -50, // pull the logo visually higher
+          paddingTop: Math.max(insets.top - 20, 0),
+          marginTop: isTablet ? -10 : -30, // tablet = less negative pull
         },
-      ],
-    },
-    React.createElement(Image, {
-      source: require("../assets/logo.png"),
-      style: styles.logo,
-    })
+      ]}
+    >
+      <Image
+        source={require("../assets/logo.png")}
+        style={{
+          width: logoWidth,
+          height: logoHeight,
+          resizeMode: "contain",
+        }}
+      />
+    </View>
   );
 }
 
@@ -29,10 +40,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "transparent",
-  },
-  logo: {
-    width: 600,
-    height: 250,
-    resizeMode: "contain",
   },
 });

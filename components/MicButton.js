@@ -1,5 +1,10 @@
 import React from "react";
-import { TouchableOpacity, Animated, StyleSheet } from "react-native";
+import {
+  TouchableOpacity,
+  Animated,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function MicButton({
@@ -8,37 +13,38 @@ export default function MicButton({
   pulseAnim,
   disabled,
 }) {
-  return React.createElement(
-    Animated.View,
-    { style: { transform: [{ scale: pulseAnim }] } },
-    React.createElement(
-      TouchableOpacity,
-      {
-        testID: "mic-button", // ✅ ADDED THIS
-        style: [
+  const { width } = useWindowDimensions();
+  const isTablet = width > 600;
+
+  // Button scales with screen size
+  const size = isTablet ? width * 0.18 : width * 0.28;
+  const iconSize = isTablet ? size * 0.35 : size * 0.33;
+
+  return (
+    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+      <TouchableOpacity
+        testID="mic-button"
+        style={[
           styles.micButton,
           {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
             backgroundColor: isRecording ? "#ffffff" : "#FFF",
             opacity: disabled ? 0.6 : 1,
           },
-        ],
-        onPress: disabled ? null : onPress,
-        activeOpacity: 0.7,
-      },
-      React.createElement(FontAwesome5, {
-        name: "microphone",
-        size: 40,
-        color: "#6357F6",
-      })
-    )
+        ]}
+        onPress={disabled ? null : onPress}
+        activeOpacity={0.7}
+      >
+        <FontAwesome5 name="microphone" size={iconSize} color="#6357F6" />
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   micButton: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
     alignItems: "center",
     justifyContent: "center",
     elevation: 10,

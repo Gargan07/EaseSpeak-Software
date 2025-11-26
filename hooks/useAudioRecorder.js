@@ -8,13 +8,14 @@ export function useAudioRecorder() {
   const [recordingUri, setRecordingUri] = useState(null);
   const [microphoneAllowed, setMicrophoneAllowed] = useState(null);
   const [alreadyAsked, setAlreadyAsked] = useState(false);
+  const [volumeLevel, setVolumeLevel] = useState(null); // real-time metering
+
   const intervalRef = useRef(null);
 
-  // --- Request microphone permission safely ---
+  // Request microphone permission
   const requestPermissions = async () => {
     try {
       const { status } = await Audio.requestPermissionsAsync();
-      // Safe state update, no React warnings
       setMicrophoneAllowed(status === "granted");
       return status === "granted";
     } catch (err) {
@@ -23,11 +24,10 @@ export function useAudioRecorder() {
     }
   };
 
-  // --- Start recording ---
+  // Start audio recording
   const startRecording = async (onPulseStart, onPulseStop) => {
     try {
       if (microphoneAllowed === null) {
-        // Avoid state updates before React finishes rendering
         requestAnimationFrame(async () => {
           const granted = await requestPermissions();
           if (!granted) return;
@@ -57,23 +57,19 @@ export function useAudioRecorder() {
         return;
       }
 
-      // Stop any existing recording first
+      // Stop existing recording if any
       if (recording) {
         try {
           await recording.unloadAsync();
-        } catch (err) {
-          console.warn("No active recording to stop:", err);
-        }
+        } catch {}
         setTimeout(() => setRecording(null), 0);
       }
 
-      // Configure audio mode
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
 
-      // Create and prepare a new recording
       const newRecording = new Audio.Recording();
       await newRecording.prepareToRecordAsync({
         isMeteringEnabled: true,
@@ -99,40 +95,45 @@ export function useAudioRecorder() {
       setTimeout(() => setRecording(newRecording), 0);
       onPulseStart?.();
 
-      // --- Continuous noise check (every 0.5s for 2s) ---
+      // --- REAL-TIME METERING LOOP (every 100ms) ---
       intervalRef.current = setInterval(async () => {
         try {
           const status = await newRecording.getStatusAsync();
+
+          // update dB level (-160 = silence, 0 = loud)
+          if (status?.metering !== undefined) {
+            setVolumeLevel(status.metering);
+          }
+
+          // --- Noise alert logic still works ---
           if (status?.metering > -45 && !alreadyAsked) {
             playAlertSound();
             Vibration.vibrate();
 
             Alert.alert(
               "Too Noisy!",
-              "Transcription may not be accurate. Do you still want to continue recording?",
+              "Transcription may not be accurate. Continue recording?",
               [
                 {
                   text: "Cancel",
                   style: "cancel",
                   onPress: async () => {
-                    // Stop everything and reset
                     clearInterval(intervalRef.current);
                     await newRecording.stopAndUnloadAsync();
                     onPulseStop?.();
                     setRecording(null);
+                    setVolumeLevel(null);
                   },
                 },
                 {
                   text: "OK",
                   onPress: async () => {
-                    // Mark that we already asked once
                     setAlreadyAsked(true);
-
-                    // Still stop current recording just like "Cancel"
                     clearInterval(intervalRef.current);
                     await newRecording.stopAndUnloadAsync();
                     onPulseStop?.();
                     setRecording(null);
+                    setVolumeLevel(null);
                   },
                 },
               ]
@@ -141,19 +142,18 @@ export function useAudioRecorder() {
         } catch (err) {
           console.warn("Metering check error:", err);
         }
-      }, 500);
-
-      // Stop checking after 2 seconds
-      setTimeout(() => clearInterval(intervalRef.current), 2000);
+      }, 100);
     } catch (error) {
       console.error("Error starting recording:", error);
     }
   };
 
-  // --- Stop recording ---
+  // Stop recording
   const stopRecording = async (onPulseStop) => {
     try {
       clearInterval(intervalRef.current);
+      setVolumeLevel(null);
+
       if (!recording) {
         onPulseStop?.();
         setTimeout(() => setRecording(null), 0);
@@ -180,5 +180,6 @@ export function useAudioRecorder() {
     startRecording,
     stopRecording,
     setRecordingUri,
+    volumeLevel, // EXPORTED
   };
 }

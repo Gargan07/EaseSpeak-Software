@@ -5,24 +5,6 @@ const TutorialScreen = ({ navigation }) => {
   const [step, setStep] = useState(0);
   const [microphoneAllowed, setMicrophoneAllowed] = useState(null);
 
-  const requestMicrophonePermission = () => {
-    Alert.alert(
-      '"EASE SPEAK" Would Like To Access The Microphone',
-      "Allow EASE SPEAK to access your microphone to start recording.",
-      [
-        {
-          text: "Don't Allow",
-          style: "cancel",
-          onPress: () => setMicrophoneAllowed(false),
-        },
-        {
-          text: "Allow",
-          onPress: () => setMicrophoneAllowed(true),
-        },
-      ]
-    );
-  };
-
   const nextStep = () => {
     if (step === 0) {
       Alert.alert(
@@ -38,7 +20,7 @@ const TutorialScreen = ({ navigation }) => {
             text: "Allow",
             onPress: () => {
               setMicrophoneAllowed(true);
-              setStep(step + 1); // Move to the next step only if allowed
+              setStep(step + 1);
             },
           },
         ]
@@ -64,6 +46,7 @@ const TutorialScreen = ({ navigation }) => {
           <Text style={styles.text}>Step 1: Use a good microphone.</Text>
         </View>
       )}
+
       {step === 1 && (
         <View style={styles.stepContainer}>
           <Image
@@ -75,6 +58,7 @@ const TutorialScreen = ({ navigation }) => {
           </Text>
         </View>
       )}
+
       {step === 2 && (
         <View style={styles.stepContainer}>
           <Image
@@ -89,6 +73,7 @@ const TutorialScreen = ({ navigation }) => {
 
       <View style={styles.footerContainer}>
         <Button title="Next" onPress={nextStep} />
+
         <View style={styles.indicatorContainer}>
           {[0, 1, 2].map((index) => (
             <View
@@ -100,6 +85,7 @@ const TutorialScreen = ({ navigation }) => {
             />
           ))}
         </View>
+
         <Button title="Skip" onPress={skipTutorial} color="gray" />
       </View>
     </View>
