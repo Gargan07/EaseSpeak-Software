@@ -5,7 +5,8 @@ import librosa
 import numpy as np
 import onnxruntime as ort
 import speech_recognition as sr
-from transformers import Wav2Vec2Processor
+import torch
+from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 from utils.audio_utils import load_audio
 from models.base_recognizer import SpeechRecognizer
 
@@ -114,3 +115,28 @@ class GmmRecognizer(SpeechRecognizer):
         except Exception as e:
             print(f"GMM Transcription error: {e}")
             return ""
+
+class Wav2Vec2TorchRecognizer(SpeechRecognizer):
+    def __init__(self, model_name: str):
+        self.processor = Wav2Vec2Processor.from_pretrained(model_name)
+        self.model = Wav2Vec2ForCTC.from_pretrained(model_name)
+        self.model.eval()
+
+    def transcribe(self, audio_path: str) -> str:
+        audio, sample_rate = load_audio(audio_path)
+        if audio is None:
+            return ""
+
+        input_values = self.processor(
+            audio,
+            sampling_rate=sample_rate,
+            return_tensors="pt"
+        ).input_values
+
+        with torch.no_grad():
+            logits = self.model(input_values).logits
+
+        predicted_ids = torch.argmax(logits, dim=-1)
+        transcription = self.processor.batch_decode(predicted_ids)[0]
+
+        return transcription

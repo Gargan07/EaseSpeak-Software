@@ -1,13 +1,15 @@
 from enum import Enum
 from fastapi import Query
-from models.recognizers import Wav2Vec2OnnxRecognizer, HmmRecognizer, GmmRecognizer
+from models.recognizers import Wav2Vec2OnnxRecognizer, HmmRecognizer, GmmRecognizer, Wav2Vec2TorchRecognizer
 from models.base_recognizer import SpeechRecognizer
 
 # Enum for engines
 class Engine(str, Enum):
     wav2vec2 = "wav2vec2"
+    wav2vec2_torch = "wav2vec2_torch"
     hmm = "hmm"
     gmm = "gmm"
+
 
 # Flag to force a server-side engine
 FORCE_ENGINE: Engine | None = None  # set to Engine.gmm to force GMM
@@ -22,6 +24,10 @@ def get_speech_recognizer(
         return Wav2Vec2OnnxRecognizer(
             onnx_model_path=r"F:\EaseSpeak-Software-woody\SpeechRecognition\model\wav2vec2-quant-simplified.onnx",
             processor_name="Gargan07/wav2vec2-disfluency-model",
+        )
+    elif chosen_engine == Engine.wav2vec2_torch:
+        return Wav2Vec2TorchRecognizer(
+            model_name="Gargan07/wav2vec2-disfluency-model"
         )
     elif chosen_engine == Engine.hmm:
         return HmmRecognizer()
