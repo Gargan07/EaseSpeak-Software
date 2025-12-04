@@ -42,31 +42,70 @@ export default function HomeScreen() {
   const { uploadAudio, loading } = useAudioUploader(setTranscription);
   const { pulseAnim, startPulse, stopPulse } = usePulseAnimation();
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [statusText, setStatusText] = useState(
+    "Press mic to start recording..."
+  );
 
-  const SILENCE_THRESHOLD = -40; // quiet enough
-  const SILENCE_DURATION = 3000; // 3 seconds
+  const SILENCE_THRESHOLD = -35; // quiet enough
+  const SILENCE_DURATION = 5000;
   const silenceStartRef = useRef(null);
+  const resetSilence = () => {
+    silenceStartRef.current = null;
+  };
 
   useEffect(() => {
     clearCache();
   }, []);
 
-  // --- AUTO STOP WHEN USER IS SILENT FOR 3 SECONDS ---
+  useEffect(() => {
+    let timer;
+
+    if (recording) {
+      // Step 1: Immediately show "Start talking..."
+      setStatusText("Start talking...");
+
+      // Step 2: After 2 seconds, show "Listening..."
+      timer = setTimeout(() => {
+        setStatusText("Listening...");
+
+        // Step 3: After 1 more second, show "Listening... Press mic to stop..."
+        timer = setTimeout(() => {
+          setStatusText("Listening... Press mic to stop...");
+        }, 2000);
+      }, 3000);
+    } else {
+      // Reset to initial state when recording stops
+      setStatusText("Press mic to start recording...");
+    }
+
+    return () => clearTimeout(timer); // clears last timer if recording stops early
+  }, [recording]);
+
+  // --- AUTO STOP WHEN USER IS SILENT FOR 5 SECONDS ---
   useEffect(() => {
     if (!recording) return;
 
-    const interval = setInterval(() => {
+    let interval = setInterval(() => {
       if (volumeLevel !== null && volumeLevel < SILENCE_THRESHOLD) {
         if (!silenceStartRef.current) {
           silenceStartRef.current = Date.now();
         } else {
           const elapsed = Date.now() - silenceStartRef.current;
+
           if (elapsed >= SILENCE_DURATION) {
-            stopRecording(stopPulse).then(() => {
-              if (recordingUri) {
-                uploadAudio(recordingUri, () => setRecordingUri(null));
+            console.log("AUTO STOP triggered");
+
+            // STOP RECORDING
+            stopRecording(stopPulse).then((uri) => {
+              if (uri) {
+                console.log("Uploading auto-stopped recording:", uri);
+
+                uploadAudio(uri, () => {
+                  setRecordingUri(null);
+                });
               }
             });
+
             silenceStartRef.current = null;
             clearInterval(interval);
           }
@@ -85,7 +124,7 @@ export default function HomeScreen() {
 
     recording
       ? await stopRecording(stopPulse)
-      : await startRecording(startPulse, stopPulse);
+      : await startRecording(startPulse, stopPulse, resetSilence);
 
     setTimeout(() => setIsButtonDisabled(false), 300);
   };
@@ -129,9 +168,7 @@ export default function HomeScreen() {
             />
 
             <Text style={[styles.statusText, { fontSize: isTablet ? 20 : 16 }]}>
-              {!recording
-                ? "Press mic to start recording..."
-                : "Start talking..."}
+              {statusText}
             </Text>
 
             <View style={styles.bottomBoxWrapper}>

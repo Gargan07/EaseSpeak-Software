@@ -7,10 +7,10 @@ export function useAudioRecorder() {
   const [recording, setRecording] = useState(null);
   const [recordingUri, setRecordingUri] = useState(null);
   const [microphoneAllowed, setMicrophoneAllowed] = useState(null);
-  const [alreadyAsked, setAlreadyAsked] = useState(false);
   const [volumeLevel, setVolumeLevel] = useState(null); // real-time metering
-
+  const alreadyAskedRef = useRef(false);
   const intervalRef = useRef(null);
+  const noiseCheckActiveRef = useRef(true);
 
   // Request microphone permission
   const requestPermissions = async () => {
@@ -25,7 +25,7 @@ export function useAudioRecorder() {
   };
 
   // Start audio recording
-  const startRecording = async (onPulseStart, onPulseStop) => {
+  const startRecording = async (onPulseStart, onPulseStop, resetSilence) => {
     try {
       if (microphoneAllowed === null) {
         requestAnimationFrame(async () => {
@@ -56,6 +56,12 @@ export function useAudioRecorder() {
         );
         return;
       }
+
+      noiseCheckActiveRef.current = true;
+
+      setTimeout(() => {
+        noiseCheckActiveRef.current = false; // stop noise detection after 3s
+      }, 3000);
 
       // Stop existing recording if any
       if (recording) {
@@ -105,10 +111,22 @@ export function useAudioRecorder() {
             setVolumeLevel(status.metering);
           }
 
+          if (!noiseCheckActiveRef.current) return;
+
           // --- Noise alert logic still works ---
-          if (status?.metering > -45 && !alreadyAsked) {
+          if (status?.metering > -45 && !alreadyAskedRef.current) {
+            alreadyAskedRef.current = true;
+
+            // STOP interval immediately to prevent repeated alerts
+            clearInterval(intervalRef.current);
+
             playAlertSound();
             Vibration.vibrate();
+
+            await newRecording.stopAndUnloadAsync();
+            onPulseStop?.();
+            setRecording(null);
+            setVolumeLevel(null);
 
             Alert.alert(
               "Too Noisy!",
@@ -118,22 +136,17 @@ export function useAudioRecorder() {
                   text: "Cancel",
                   style: "cancel",
                   onPress: async () => {
+                    alreadyAskedRef.current = false;
                     clearInterval(intervalRef.current);
-                    await newRecording.stopAndUnloadAsync();
-                    onPulseStop?.();
-                    setRecording(null);
-                    setVolumeLevel(null);
+                    resetSilence?.();
                   },
                 },
                 {
                   text: "OK",
                   onPress: async () => {
-                    setAlreadyAsked(true);
                     clearInterval(intervalRef.current);
-                    await newRecording.stopAndUnloadAsync();
-                    onPulseStop?.();
-                    setRecording(null);
-                    setVolumeLevel(null);
+                    resetSilence?.();
+                    // same here, do not reset
                   },
                 },
               ]
@@ -148,7 +161,6 @@ export function useAudioRecorder() {
     }
   };
 
-  // Stop recording
   const stopRecording = async (onPulseStop) => {
     try {
       clearInterval(intervalRef.current);
@@ -156,21 +168,24 @@ export function useAudioRecorder() {
 
       if (!recording) {
         onPulseStop?.();
-        setTimeout(() => setRecording(null), 0);
-        return;
+        setRecording(null);
+        return null;
       }
 
       const status = await recording.getStatusAsync();
       if (status.isRecording) {
         await recording.stopAndUnloadAsync();
-        const uri = recording.getURI();
-        setTimeout(() => setRecordingUri(uri), 0);
       }
+
+      const uri = recording.getURI();
+      setRecordingUri(uri);
+      return uri;
     } catch (error) {
       console.error("Error stopping recording:", error);
+      return null;
     } finally {
       onPulseStop?.();
-      setTimeout(() => setRecording(null), 0);
+      setRecording(null);
     }
   };
 

@@ -27,7 +27,7 @@ export default function TranscriptionBox({
       style={[
         styles.wrapper,
         {
-          paddingBottom: (isTablet ? -10 : -20) + insets.bottom, // respect safe area
+          paddingBottom: (isTablet ? 30 : 20) + insets.bottom, // respect safe area
           paddingTop: isTablet ? 30 : 20,
           minHeight: isTablet ? 470 : 350,
           maxWidth: 700,
